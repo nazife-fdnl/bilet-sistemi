@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from decimal import Decimal
+from typing import Optional
 
+from bilet_sistemi.fiyat import FiyatStratejisi, StandartFiyat
 from bilet_sistemi.para import yuvarla
 from bilet_sistemi.salon.koltuk import Koltuk
 
@@ -23,14 +25,33 @@ class Bilet(ABC):
         """Biletin ödenecek tutarı (TL)."""
 
 
-# Somut biletlerin ortak verisini tutan ara sınıf (kalıp rolü değildir;
-# üç bilet sınıfında aynı alanları tekrar yazmamak için vardır).
+# Somut biletlerin ortak verisini tutan ara sınıf; üç bilet sınıfında
+# aynı alanları tekrar yazmamak için vardır.
+#
+# [Strategy kalıbı] Rol: Context
+# Bilet, fiyat kuralını bir FiyatStratejisi nesnesinde tutar. Önce etkinlik
+# türünün kendi fiyatını (tur_fiyati) bulur, sonra seçilen stratejiyi uygular.
+# Yeni bir indirim türü bu sınıfa dokunmadan eklenebilir.
 class EtkinlikBileti(Bilet, ABC):
 
-    def __init__(self, etkinlik_adi: str, koltuk: Koltuk, taban_fiyat: Decimal) -> None:
+    def __init__(
+        self,
+        etkinlik_adi: str,
+        koltuk: Koltuk,
+        taban_fiyat: Decimal,
+        fiyat_stratejisi: Optional[FiyatStratejisi] = None,
+    ) -> None:
         self.etkinlik_adi = etkinlik_adi
         self.koltuk = koltuk
         self.taban_fiyat = taban_fiyat
+        self.fiyat_stratejisi: FiyatStratejisi = fiyat_stratejisi or StandartFiyat()
+
+    @abstractmethod
+    def tur_fiyati(self) -> Decimal:
+        """Etkinlik türünün kuralına göre indirimsiz fiyat."""
+
+    def fiyat(self) -> Decimal:
+        return yuvarla(self.fiyat_stratejisi.uygula(self.tur_fiyati()))
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
@@ -42,10 +63,10 @@ class KonserBileti(EtkinlikBileti):
     def aciklama(self) -> str:
         return f"Konser: {self.etkinlik_adi} | Koltuk {self.koltuk.kod} ({self.koltuk.kategori})"
 
-    def fiyat(self) -> Decimal:
+    def tur_fiyati(self) -> Decimal:
         if self.koltuk.kategori == "vip":
-            return yuvarla(self.taban_fiyat * self.VIP_CARPANI)
-        return yuvarla(self.taban_fiyat)
+            return self.taban_fiyat * self.VIP_CARPANI
+        return self.taban_fiyat
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
@@ -58,10 +79,10 @@ class TiyatroBileti(EtkinlikBileti):
     def aciklama(self) -> str:
         return f"Tiyatro: {self.etkinlik_adi} | Koltuk {self.koltuk.kod} (sıra {self.koltuk.sira_no})"
 
-    def fiyat(self) -> Decimal:
+    def tur_fiyati(self) -> Decimal:
         if self.koltuk.sira_no <= self.ON_SIRA_SINIRI:
-            return yuvarla(self.taban_fiyat * self.ON_SIRA_CARPANI)
-        return yuvarla(self.taban_fiyat)
+            return self.taban_fiyat * self.ON_SIRA_CARPANI
+        return self.taban_fiyat
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
@@ -72,5 +93,5 @@ class KonferansBileti(EtkinlikBileti):
         return (f"Konferans: {self.etkinlik_adi} | Koltuk {self.koltuk.kod} "
                 f"| Katılım sertifikası dahil")
 
-    def fiyat(self) -> Decimal:
-        return yuvarla(self.taban_fiyat)
+    def tur_fiyati(self) -> Decimal:
+        return self.taban_fiyat

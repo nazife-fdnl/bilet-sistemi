@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from decimal import Decimal
+from typing import Optional
 
 from bilet_sistemi.etkinlik.bilet import Bilet, KonferansBileti, KonserBileti, TiyatroBileti
+from bilet_sistemi.fiyat import FiyatStratejisi
 from bilet_sistemi.salon.koltuk import Koltuk
 
 
@@ -20,16 +22,18 @@ class EtkinlikOlusturucu(ABC):
         self.taban_fiyat = taban_fiyat
 
     @abstractmethod
-    def bilet_olustur(self, koltuk: Koltuk) -> Bilet:
+    def bilet_olustur(self, koltuk: Koltuk,
+                      fiyat_stratejisi: Optional[FiyatStratejisi] = None) -> Bilet:
         """Fabrika metodu: bu etkinlik türüne ait bileti üretir."""
 
-    def bilet_sat(self, koltuk: Koltuk) -> Bilet:
+    def bilet_sat(self, koltuk: Koltuk,
+                  fiyat_stratejisi: Optional[FiyatStratejisi] = None) -> Bilet:
         """Koltuğu satar ve o koltuk için bu etkinliğin biletini döndürür.
 
         Koltuk satışa uygun değilse koltuğun durumu (State kalıbı)
         GecersizIslemHatasi fırlatır ve bilet verilmez.
         """
-        bilet = self.bilet_olustur(koltuk)
+        bilet = self.bilet_olustur(koltuk, fiyat_stratejisi)
         koltuk.sat()
         return bilet
 
@@ -37,19 +41,22 @@ class EtkinlikOlusturucu(ABC):
 # [Factory Method kalıbı] Rol: ConcreteCreator
 class KonserOlusturucu(EtkinlikOlusturucu):
 
-    def bilet_olustur(self, koltuk: Koltuk) -> Bilet:
-        return KonserBileti(self.etkinlik_adi, koltuk, self.taban_fiyat)
+    def bilet_olustur(self, koltuk: Koltuk,
+                      fiyat_stratejisi: Optional[FiyatStratejisi] = None) -> Bilet:
+        return KonserBileti(self.etkinlik_adi, koltuk, self.taban_fiyat, fiyat_stratejisi)
 
 
 # [Factory Method kalıbı] Rol: ConcreteCreator
 class TiyatroOlusturucu(EtkinlikOlusturucu):
 
-    def bilet_olustur(self, koltuk: Koltuk) -> Bilet:
-        return TiyatroBileti(self.etkinlik_adi, koltuk, self.taban_fiyat)
+    def bilet_olustur(self, koltuk: Koltuk,
+                      fiyat_stratejisi: Optional[FiyatStratejisi] = None) -> Bilet:
+        return TiyatroBileti(self.etkinlik_adi, koltuk, self.taban_fiyat, fiyat_stratejisi)
 
 
 # [Factory Method kalıbı] Rol: ConcreteCreator
 class KonferansOlusturucu(EtkinlikOlusturucu):
 
-    def bilet_olustur(self, koltuk: Koltuk) -> Bilet:
-        return KonferansBileti(self.etkinlik_adi, koltuk, self.taban_fiyat)
+    def bilet_olustur(self, koltuk: Koltuk,
+                      fiyat_stratejisi: Optional[FiyatStratejisi] = None) -> Bilet:
+        return KonferansBileti(self.etkinlik_adi, koltuk, self.taban_fiyat, fiyat_stratejisi)
