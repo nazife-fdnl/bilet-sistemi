@@ -7,7 +7,9 @@ testlerde doğrulanır.
 
 Yazım kuralı: Bu dokümanda tutarlar okunaklılık için `1045,00 TL` diye yazılabilir;
 **program çıktısında tutarlar `str(Decimal)` biçimindedir, yani noktalıdır: `1045.00 TL`.**
-Ters tırnak içindeki metinler programın birebir yazdığı metinlerdir.
+Ters tırnak içindeki metinler programın birebir yazdığı metinlerdir. Bunların dışındaki
+satır düzeni (sütun hizaları, liste satırlarının biçimi) serbesttir; testler yalnızca
+ters tırnakla verilen parçaları denetler.
 
 ## 1. Amaç ve kapsam
 
@@ -64,10 +66,12 @@ Her koltuk `Boş` başlar. İzin verilen geçişler:
 - Kapasite ve boş koltuk sayısı salon, blok, sıra ve tek koltuk için aynı yöntemle sorulur;
   üst seviye, alt seviyelerin toplamıdır. Tek koltuğun kapasitesi 1, `Boş` ise boş sayısı 1'dir.
 - "Boş" sayılan koltuk yalnızca `Boş` durumundakidir (tutulan koltuk boş sayılmaz).
-- Gruba sonradan bileşen eklenebilir (`ekle`) ve çıkarılabilir (`cikar`).
+- Gruba sonradan bileşen eklenebilir (`ekle`) ve çıkarılabilir (`cikar`). `cikar` yalnızca
+  doğrudan çocuklar için geçerlidir; olmayan bileşen için `ValueError` verir (listeden silme).
 - Bir grup kendi içine (doğrudan veya alt gruplarının içine) eklenemez:
   `{grup}: bir grup kendi içine eklenemez.` Aynı bileşen bir gruba iki kez eklenemez:
-  `{grup}: {bileşen} zaten bu grupta.` (ikisi de `GecersizIslemHatasi`).
+  `{grup}: {bileşen} zaten bu grupta.` (ikisi de `GecersizIslemHatasi`). Tekrar denetimi
+yalnızca doğrudan çocuklara bakar; kendi içine ekleme denetimi bütün alt ağaca bakar.
 - `KoltukGrubu.koltuk_bul(kod)` koltuk yoksa **`None`** döndürür; gişe bunu `BulunamadiHatasi`'na çevirir (K10).
 - `salon_olustur(ad, {blok: (sıra_sayısı, sıra_başına_koltuk)}, vip_bloklar)` ağacı kurar
   (blok sırası sözlük sırasıdır).
@@ -125,6 +129,10 @@ yarımlar yukarı (ROUND_HALF_UP).
 - Satış yalnızca `Boş` veya `Tutuldu` koltuğa yapılır; sonunda koltuk `Satıldı` olur.
 - Etkinlik tarihi geçmişse (`kalan_gun < 0`) satış yapılmaz:
   `{etkinlik} etkinliği geçmişte kaldı; bilet satılamaz.` (`GecersizIslemHatasi`).
+- `satin_al` denetim sırası: etkinlik → koltuk → etkinlik tarihi → tarife → ekstralar → satış
+  (`bilet_sat`, koltuk durumu). İlk başarısız denetimin hatası fırlatılır.
+- `fiyat_teklifi` tarih ve satılabilirlik denetimi yapmaz; satılmış koltuk uyarısını
+  (`koltuk satılamaz (durum: …)`) arayüz, tarife sormadan önce verir.
 - Satış numaraları 1'den başlar, her başarılı satışta 1 artar; iptal numarayı geri vermez.
 - Tarife veya ekstra kodu geçersizse (`GecersizSecimHatasi`) **koltuk satılmaz, kayıt oluşmaz.**
 - Satılmış koltuğa satış `GecersizIslemHatasi` verir, kayıt oluşmaz.
@@ -145,7 +153,9 @@ yarımlar yukarı (ROUND_HALF_UP).
 
 ### K10. Hatalar
 
-Hepsi `BiletSistemiHatasi`'ndan türer.
+Hepsi `BiletSistemiHatasi`'ndan türer. Mesajlarda `{kod}` kullanıcının yazdığı kodun
+baştaki/sondaki boşlukları silinmiş, harfleri **değiştirilmemiş** hâlidir; `{etkinlik}` etkinlik
+adıdır (`Etkinlik.ad`).
 
 | Hata | Mesaj | Ne zaman |
 | --- | --- | --- |
@@ -165,6 +175,7 @@ Hepsi `BiletSistemiHatasi`'ndan türer.
 | T1 | Tiyatro | Hamlet | bugün + 20 gün | Şehir Tiyatrosu | P: 6 × 8 — 48 koltuk | 300 TL |
 | F1 | Konferans | Yazılım Mimarisi Zirvesi | bugün + 60 gün | Kongre Salonu | A: 5 × 10 — 50 koltuk | 200 TL |
 
+`Etkinlik.tur` tam olarak `"Konser"`, `"Tiyatro"` veya `"Konferans"`tır.
 Tarihler `bugun`e göre verildiği için erken kayıt indirimi konser ve konferansta geçerli,
 tiyatroda geçersizdir. `bugun` verilmezse sistem tarihi kullanılır.
 
@@ -240,8 +251,8 @@ Cevaplar `senaryo_girdisi` ile soruyla birlikte ekrana yazılır (`Seçiminiz: 1
 
 `python3 main.py --kaliplar` beş kalıbı doğrudan sınıflarıyla gösterir:
 1. `salon_olustur("Kültür Merkezi", {"A": (5, 8), "B": (2, 6)}, vip_bloklar=["B"])` (52 koltuk) yazdırılır.
-2. `KonserOlusturucu("Rock Gecesi", 500)` ile A-3-4 standart (500.00), A-3-5 öğrenci (350.00), B-1-1 erken kayıt 45 gün (800.00) satılır.
-3. `TiyatroOlusturucu("Hamlet", 300)` ile A-1-1 kurumsal satılır (300 × 1,25 × 0,85 = 318.75).
+2. `KonserOlusturucu("Rock Gecesi", Decimal("500"))` ile A-3-4 standart (500.00), A-3-5 öğrenci (350.00), B-1-1 erken kayıt 45 gün (800.00) satılır.
+3. `TiyatroOlusturucu("Hamlet", Decimal("300"))` ile A-1-1 kurumsal satılır (300 × 1,25 × 0,85 = 318.75).
 4. A-3-4 bileti `IptalSigortasi(Otopark(VipGiris(bilet)))` ile sarılır: `Toplam: 797.50 TL`.
 5. A-5-8 tutulup bırakılır; satılmış A-3-4'e tekrar satış denenir (hata yazdırılır); A-3-4 iptal edilir.
 6. Son durum: `Salon(Kültür Merkezi, 49/52 boş)`.

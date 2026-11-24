@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 from bilet_sistemi.hatalar import BulunamadiHatasi, GecersizIslemHatasi, GecersizSecimHatasi
-from bilet_sistemi.uygulama import EKSTRALAR, TARIFELER, ornek_gise
+from bilet_sistemi.uygulama import EKSTRALAR, TARIFELER, BiletGisesi, ornek_gise
 
 BUGUN = date(2026, 11, 24)
 
@@ -168,8 +168,8 @@ class HataTestleri(unittest.TestCase):
         self.assertEqual(self.gise.satislar(), [])
 
     def test_gecmis_etkinlige_bilet_satilamaz(self) -> None:
-        gise = ornek_gise(BUGUN)
-        gise._bugun = date(2027, 6, 1)  # bütün etkinlikler geçmişte
+        # Aynı etkinlikler, bütün etkinlik tarihlerinden sonraki bir günde
+        gise = BiletGisesi(ornek_gise(BUGUN).etkinlikler(), bugun=date(2027, 6, 1))
         with self.assertRaises(GecersizIslemHatasi):
             gise.satin_al("K1", "A-1-1")
         self.assertEqual(gise.koltuk_bul("K1", "A-1-1").durum_adi, "Boş")

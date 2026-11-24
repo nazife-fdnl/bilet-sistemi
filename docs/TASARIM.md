@@ -403,6 +403,9 @@ durumu, geçmiş etkinliğe satış engeli, Composite ağaç koruması.
 ## 9. API özeti
 
 Bütün genel sınıflar, fonksiyonlar ve imzaları. Tutarlar `Decimal`, tarihler `datetime.date`.
+Bütün fiyat sabitleri (`UCRET`, `ORAN`, `*_CARPANI`) `Decimal`'dir ve sınıf özniteliği olarak
+**hesap anında** okunur (sınıfta değiştirilirse sonraki hesaplar yeni değeri kullanır;
+sabitlenmiş `Satis.tutar` değişmez). `taban_fiyat` her zaman `Decimal` verilir.
 Modül yolları `bilet_sistemi/` altındadır; her alt paket `__init__.py` içinde bu adları dışa aktarır
 (ör. `from bilet_sistemi.salon import Koltuk`).
 
@@ -429,7 +432,7 @@ Modül yolları `bilet_sistemi/` altındadır; her alt paket `__init__.py` için
 | `uygulama.satis` | `Satis` (dataclass) | `Satis(no: int, etkinlik, koltuk, bilet: Bilet, tutar: Decimal, tarife: str, ekstralar: List[str] = [], iptal_edildi: bool = False)` |
 | `uygulama.gise` | `TARIFELER` | `OrderedDict[kod, (menü_adı, Callable[[Etkinlik, date], FiyatStratejisi])]`, K4 sırasıyla |
 | `uygulama.gise` | `EKSTRALAR` | `OrderedDict[kod, (menü_adı, Type[EkstraHizmet])]`, K5 sırasıyla |
-| `uygulama.gise` | `BiletGisesi` | `BiletGisesi(etkinlikler: Sequence[Etkinlik], bugun: Optional[date] = None)`; `bugun` (özellik); `etkinlikler()`, `etkinlik_bul(kod)`, `koltuk_bul(etkinlik_kodu, koltuk_kodu)`, `satislar(iptaller_dahil=False)`, `satis_bul(no)`, `strateji_olustur(etkinlik, tarife)`, `ekstralari_dogrula(ekstralar)`, `ekstralari_ekle(bilet, ekstralar) -> Bilet`, `fiyat_teklifi(etkinlik_kodu, koltuk_kodu, tarife="standart", ekstralar=()) -> Bilet`, `satin_al(...) -> Satis` (aynı parametreler), `koltuk_tut(...) -> Koltuk`, `koltuk_birak(...) -> Koltuk`, `satis_iptal(no) -> Satis`, `toplam_ciro() -> Decimal`, `etkinlik_ozeti() -> List[Tuple[Etkinlik, int, Decimal]]` |
+| `uygulama.gise` | `BiletGisesi` | `BiletGisesi(etkinlikler: Sequence[Etkinlik], bugun: Optional[date] = None)`; `bugun` (özellik: verilen tarih, verilmediyse `date.today()`); `etkinlikler()`, `etkinlik_bul(kod)`, `koltuk_bul(etkinlik_kodu, koltuk_kodu)`, `satislar(iptaller_dahil=False)`, `satis_bul(no)`, `strateji_olustur(etkinlik, tarife)`, `ekstralari_dogrula(ekstralar)`, `ekstralari_ekle(bilet, ekstralar) -> Bilet`, `fiyat_teklifi(etkinlik_kodu, koltuk_kodu, tarife="standart", ekstralar=()) -> Bilet`, `satin_al(...) -> Satis` (aynı parametreler), `koltuk_tut(...) -> Koltuk`, `koltuk_birak(...) -> Koltuk`, `satis_iptal(no) -> Satis`, `toplam_ciro() -> Decimal`, `etkinlik_ozeti() -> List[Tuple[Etkinlik, int, Decimal]]` |
 | `uygulama.ornek_veri` | `ornek_gise` | `ornek_gise(bugun: Optional[date] = None) -> BiletGisesi` |
 | `arayuz.cli` | `KomutSatiriArayuzu` | `KomutSatiriArayuzu(gise, girdi: Callable[[str], str] = input, cikti: Callable[[str], None] = print)`; `calistir()` |
 | `arayuz.cli` | `senaryo_girdisi` | `senaryo_girdisi(adimlar: Iterable[str], cikti=print) -> girdi`: dönen `girdi(soru)` cevapları sırayla verir, her seferinde `cikti(soru + cevap)` çağırır, cevaplar bitince `EOFError` fırlatır |
