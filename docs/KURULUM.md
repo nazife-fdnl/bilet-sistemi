@@ -7,7 +7,7 @@ sorunların çözümünü anlatır.
 
 | Gereksinim | Sürüm | Not |
 | --- | --- | --- |
-| Python | 3.9 veya üstü | Proje Python 3.9.6 ve 3.10 ile denenmiştir. |
+| Python | 3.9 veya üstü | Proje Python 3.9, 3.10 ve 3.13 ile denenmiştir. |
 | Git | Herhangi bir güncel sürüm | Yalnızca depoyu indirmek için gerekir. |
 
 Proje yalnızca Python'un standart kütüphanesini kullanır. **Ek paket kurmanız gerekmez**
@@ -48,22 +48,34 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
 Proje klasörünün içindeyken:
 
-```bash
-python3 main.py
+| Komut | Ne yapar |
+| --- | --- |
+| `python3 main.py` | Menülü uygulamayı açar; klavyeden kullanılır. Çıkmak için `0`. |
+| `python3 main.py --demo` | Menüyü hazır bir kullanıcı senaryosuyla baştan sona çalıştırır (satış, hata, iptal, rapor). |
+| `python3 main.py --kaliplar` | Beş tasarım kalıbını doğrudan sınıflarıyla tek tek gösterir. |
+| `python3 main.py --help` | Seçenekleri listeler. |
+
+Menü açıldığında şunu görmelisiniz:
+
+```
+Etkinlik Bilet Satış ve Rezervasyon Sistemi
+
+========= BİLET GİŞESİ =========
+1) Etkinlikleri listele
+2) Salon ve koltuk haritası
+3) Bilet satın al
+4) Koltuk tut
+5) Tutulan koltuğu bırak
+6) Satış iptal et
+7) Satışlar ve rapor
+0) Çıkış
+================================
+Seçiminiz:
 ```
 
-Demo programı beş tasarım kalıbını tek bir senaryoda çalıştırır: salonu kurar,
-farklı tarifelerle bilet satar, ekstra hizmet ekler ve koltuk durumlarını gösterir.
-Çıktının başı şöyle görünmelidir:
-
-```
-Etkinlik Bilet Satış ve Rezervasyon Sistemi - Demo
-
-=== 1. Salon (Composite) ===
-Salon(Kültür Merkezi, 52/52 boş)
-  Blok(A, 40/40 boş)
-  Blok(B, 12/12 boş)
-```
+Örnek kullanım: `3` → etkinlik kodu `K1` → koltuk `B-1-3` → tarife `3` (erken kayıt) →
+ekstralar `1,3` (VIP giriş ve sigorta) → onay `E`. Tutar 1045,00 TL olmalıdır.
+Menü ve kuralların tamamı: [GEREKSINIMLER.md](GEREKSINIMLER.md).
 
 Testlerin nasıl çalıştırılacağı için [TEST.md](TEST.md) dosyasına bakın.
 
