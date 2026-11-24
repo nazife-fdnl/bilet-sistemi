@@ -24,6 +24,10 @@ class KoltukDurumu(ABC):
         """Koltuk bu durumdayken satışa açık mı?"""
 
     @abstractmethod
+    def satilabilir_mi(self) -> bool:
+        """Koltuk bu durumdayken satılabilir mi? (Boş ve Tutuldu: evet)"""
+
+    @abstractmethod
     def tut(self, koltuk: Koltuk) -> None:
         """Koltuğu geçici olarak ayırır."""
 

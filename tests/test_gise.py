@@ -67,6 +67,18 @@ class SatisTestleri(unittest.TestCase):
         # 200 x 0.85 = 170; +75 otopark = 245
         self.assertEqual(self.gise.satin_al("F1", "A-1-5", "kurumsal", ["otopark"]).tutar, Decimal("245.00"))
 
+    def test_satis_tutari_satis_aninda_sabitlenir(self) -> None:
+        from bilet_sistemi.ekstra import VipGiris
+        satis = self.gise.satin_al("K1", "A-1-2", "standart", ["vip"])
+        self.assertEqual(satis.tutar, Decimal("650.00"))
+        eski = VipGiris.UCRET
+        try:
+            VipGiris.UCRET = Decimal("200")  # sonradan fiyat değişikliği
+            self.assertEqual(satis.tutar, Decimal("650.00"))
+            self.assertEqual(self.gise.toplam_ciro(), Decimal("650.00"))
+        finally:
+            VipGiris.UCRET = eski
+
     def test_fiyat_teklifi_koltugu_degistirmez(self) -> None:
         teklif = self.gise.fiyat_teklifi("K1", "A-1-1", "ogrenci", ["otopark"])
         self.assertEqual(teklif.fiyat(), Decimal("425.00"))
@@ -154,6 +166,13 @@ class HataTestleri(unittest.TestCase):
             self.gise.satin_al("K1", "A-1-1", "standart", ["havai_fisek"])
         self.assertEqual(self.gise.koltuk_bul("K1", "A-1-1").durum_adi, "Boş")
         self.assertEqual(self.gise.satislar(), [])
+
+    def test_gecmis_etkinlige_bilet_satilamaz(self) -> None:
+        gise = ornek_gise(BUGUN)
+        gise._bugun = date(2027, 6, 1)  # bütün etkinlikler geçmişte
+        with self.assertRaises(GecersizIslemHatasi):
+            gise.satin_al("K1", "A-1-1")
+        self.assertEqual(gise.koltuk_bul("K1", "A-1-1").durum_adi, "Boş")
 
     def test_bos_koltuk_birakilamaz(self) -> None:
         with self.assertRaises(GecersizIslemHatasi):

@@ -14,8 +14,8 @@ from bilet_sistemi.para import yuvarla
 # isteklerini sardığı bilete iletir, sonuca kendi katkısını ekler.
 # Dekoratörler iç içe sarılabildiği için ekstralar istenen sayıda ve
 # sırada birleştirilebilir: Otopark(VipGiris(bilet)).
-# (Component rolünü Bilet arayüzü, ConcreteComponent rolünü KonserBileti,
-# TiyatroBileti ve KonferansBileti üstlenir.)
+# (Component rolü: Bilet; ConcreteComponent rolü: KonserBileti, TiyatroBileti,
+# KonferansBileti. Bu roller etkinlik/bilet.py içinde ayrıca işaretlidir.)
 class EkstraHizmet(Bilet):
 
     def __init__(self, bilet: Bilet) -> None:
@@ -27,14 +27,17 @@ class EkstraHizmet(Bilet):
         """Açıklamaya eklenecek hizmet adı."""
 
     @abstractmethod
-    def hizmet_ucreti(self) -> Decimal:
-        """Bu hizmetin bilet fiyatına eklenecek ücreti."""
+    def hizmet_ucreti(self, ic_fiyat: Decimal) -> Decimal:
+        """Bu hizmetin ücreti; ic_fiyat sarılan biletin (ve içteki ekstraların) fiyatıdır."""
 
     def aciklama(self) -> str:
         return f"{self._bilet.aciklama()} + {self.hizmet_adi}"
 
     def fiyat(self) -> Decimal:
-        return yuvarla(self._bilet.fiyat() + self.hizmet_ucreti())
+        # İçteki fiyat bir kez hesaplanır ve hizmete verilir; böylece iç içe
+        # sarmalarda her katman içtekini yalnızca bir kez sorar.
+        ic_fiyat = self._bilet.fiyat()
+        return yuvarla(ic_fiyat + self.hizmet_ucreti(ic_fiyat))
 
 
 # [Decorator kalıbı] Rol: ConcreteDecorator
@@ -47,7 +50,7 @@ class VipGiris(EkstraHizmet):
     def hizmet_adi(self) -> str:
         return "VIP giriş"
 
-    def hizmet_ucreti(self) -> Decimal:
+    def hizmet_ucreti(self, ic_fiyat: Decimal) -> Decimal:
         return self.UCRET
 
 
@@ -62,8 +65,8 @@ class IptalSigortasi(EkstraHizmet):
     def hizmet_adi(self) -> str:
         return "İptal sigortası"
 
-    def hizmet_ucreti(self) -> Decimal:
-        return self._bilet.fiyat() * self.ORAN
+    def hizmet_ucreti(self, ic_fiyat: Decimal) -> Decimal:
+        return ic_fiyat * self.ORAN
 
 
 # [Decorator kalıbı] Rol: ConcreteDecorator
@@ -76,5 +79,5 @@ class Otopark(EkstraHizmet):
     def hizmet_adi(self) -> str:
         return "Otopark"
 
-    def hizmet_ucreti(self) -> Decimal:
+    def hizmet_ucreti(self, ic_fiyat: Decimal) -> Decimal:
         return self.UCRET

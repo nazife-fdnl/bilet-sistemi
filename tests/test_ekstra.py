@@ -6,6 +6,7 @@ from decimal import Decimal
 from bilet_sistemi.ekstra import IptalSigortasi, Otopark, VipGiris
 from bilet_sistemi.etkinlik import Bilet, KonserOlusturucu
 from bilet_sistemi.fiyat import OgrenciIndirimi
+from bilet_sistemi.para import yuvarla
 from bilet_sistemi.salon import Koltuk
 
 
@@ -45,6 +46,19 @@ class EkstraHizmetTestleri(unittest.TestCase):
         konser = KonserOlusturucu("Rock Gecesi", Decimal("500"))
         ogrenci = konser.bilet_olustur(Koltuk("A-1-2", sira_no=1), OgrenciIndirimi())  # 350 TL
         self.assertEqual(VipGiris(ogrenci).fiyat(), Decimal("500.00"))
+
+    def test_cok_katmanli_sarma_dogru_ve_hizlidir(self) -> None:
+        import time
+        sarili = self.bilet
+        for _ in range(40):
+            sarili = IptalSigortasi(sarili)
+        baslangic = time.perf_counter()
+        fiyat = sarili.fiyat()
+        self.assertLess(time.perf_counter() - baslangic, 0.5)
+        beklenen = Decimal("500.00")
+        for _ in range(40):
+            beklenen = yuvarla(beklenen + beklenen * Decimal("0.10"))
+        self.assertEqual(fiyat, beklenen)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 import unittest
 
+from bilet_sistemi.hatalar import GecersizIslemHatasi
 from bilet_sistemi.salon import Koltuk, KoltukGrubu, salon_olustur
 
 
@@ -41,6 +42,26 @@ class SalonTestleri(unittest.TestCase):
         self.salon.ekle(loca)
         self.assertEqual(self.salon.kapasite(), 11)
         self.assertIsNotNone(self.salon.koltuk_bul("L-1-1"))
+
+    def test_grup_kendi_icine_eklenemez(self) -> None:
+        with self.assertRaises(GecersizIslemHatasi):
+            self.salon.ekle(self.salon)
+        blok_a = self.salon.cocuklar()[0]
+        with self.assertRaises(GecersizIslemHatasi):
+            blok_a.cocuklar()[0].ekle(blok_a)  # sıranın içine kendi bloğu
+
+    def test_ayni_bilesen_iki_kez_eklenemez(self) -> None:
+        sira = KoltukGrubu("X-1", "Sıra")
+        koltuk = Koltuk("X-1-1", sira_no=1)
+        sira.ekle(koltuk)
+        with self.assertRaises(GecersizIslemHatasi):
+            sira.ekle(koltuk)
+        self.assertEqual(sira.kapasite(), 1)
+
+    def test_bilesen_cikarilabilir(self) -> None:
+        blok_b = self.salon.cocuklar()[1]
+        self.salon.cikar(blok_b)
+        self.assertEqual(self.salon.kapasite(), 6)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,10 @@ from bilet_sistemi.salon.koltuk import Koltuk
 # [Factory Method kalıbı] Rol: Product
 # Oluşturucuların ürettiği bütün biletlerin ortak arayüzü.
 # Satış kodu yalnızca bu arayüzü bilir; somut bilet sınıflarını tanımaz.
+#
+# [Decorator kalıbı] Rol: Component
+# Ekstra hizmetler (EkstraHizmet) de bu arayüzü uygular ve bir Bilet'i sarar;
+# sarılmış bilet de istemciye yine bir Bilet olarak görünür.
 class Bilet(ABC):
 
     @abstractmethod
@@ -32,6 +36,8 @@ class Bilet(ABC):
 # Bilet, fiyat kuralını bir FiyatStratejisi nesnesinde tutar. Önce etkinlik
 # türünün kendi fiyatını (tur_fiyati) bulur, sonra seçilen stratejiyi uygular.
 # Yeni bir indirim türü bu sınıfa dokunmadan eklenebilir.
+# (fiyat() içinde alt sınıfın tur_fiyati() adımını çağırmak bir Template Method
+# benzeridir; ayrı bir kalıp olarak sayılmamıştır.)
 class EtkinlikBileti(Bilet, ABC):
 
     def __init__(
@@ -55,6 +61,7 @@ class EtkinlikBileti(Bilet, ABC):
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
+# [Decorator kalıbı] Rol: ConcreteComponent
 # Konserde VIP bloktaki koltuklar taban fiyatın iki katıdır.
 class KonserBileti(EtkinlikBileti):
 
@@ -70,6 +77,7 @@ class KonserBileti(EtkinlikBileti):
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
+# [Decorator kalıbı] Rol: ConcreteComponent
 # Tiyatroda sahneye yakın ilk üç sıra yüzde 25 daha pahalıdır.
 class TiyatroBileti(EtkinlikBileti):
 
@@ -86,6 +94,7 @@ class TiyatroBileti(EtkinlikBileti):
 
 
 # [Factory Method kalıbı] Rol: ConcreteProduct
+# [Decorator kalıbı] Rol: ConcreteComponent
 # Konferansta koltuktan bağımsız tek fiyat vardır; bilete katılım sertifikası dahildir.
 class KonferansBileti(EtkinlikBileti):
 

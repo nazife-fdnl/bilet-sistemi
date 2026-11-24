@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+from bilet_sistemi.hatalar import GecersizIslemHatasi
 from bilet_sistemi.salon.bilesen import SalonBileseni
 from bilet_sistemi.salon.koltuk import Koltuk
 
@@ -25,7 +26,18 @@ class KoltukGrubu(SalonBileseni):
         return self._ad
 
     def ekle(self, bilesen: SalonBileseni) -> None:
+        if bilesen is self or (isinstance(bilesen, KoltukGrubu) and bilesen._icerir(self)):
+            raise GecersizIslemHatasi(f"{self.ad}: bir grup kendi içine eklenemez.")
+        if any(bilesen is c for c in self._cocuklar):
+            raise GecersizIslemHatasi(f"{self.ad}: {bilesen.ad} zaten bu grupta.")
         self._cocuklar.append(bilesen)
+
+    def _icerir(self, aranan: SalonBileseni) -> bool:
+        """aranan bileşen bu grubun altında (herhangi bir derinlikte) var mı?"""
+        for cocuk in self._cocuklar:
+            if cocuk is aranan or (isinstance(cocuk, KoltukGrubu) and cocuk._icerir(aranan)):
+                return True
+        return False
 
     def cikar(self, bilesen: SalonBileseni) -> None:
         self._cocuklar.remove(bilesen)

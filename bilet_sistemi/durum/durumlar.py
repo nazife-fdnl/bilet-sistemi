@@ -26,6 +26,9 @@ class BosDurum(KoltukDurumu):
     def musait_mi(self) -> bool:
         return True
 
+    def satilabilir_mi(self) -> bool:
+        return True
+
     def tut(self, koltuk: Koltuk) -> None:
         koltuk.durumu_degistir(TutulduDurum())
 
@@ -50,6 +53,9 @@ class TutulduDurum(KoltukDurumu):
     def musait_mi(self) -> bool:
         return False
 
+    def satilabilir_mi(self) -> bool:
+        return True
+
     def tut(self, koltuk: Koltuk) -> None:
         raise GecersizIslemHatasi(f"{koltuk.kod}: koltuk zaten tutulmuş.")
 
@@ -72,6 +78,9 @@ class SatildiDurum(KoltukDurumu):
         return "Satıldı"
 
     def musait_mi(self) -> bool:
+        return False
+
+    def satilabilir_mi(self) -> bool:
         return False
 
     def tut(self, koltuk: Koltuk) -> None:

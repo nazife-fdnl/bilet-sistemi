@@ -5,11 +5,16 @@ from __future__ import annotations
 from typing import Callable, Iterable, Iterator, List
 
 from bilet_sistemi.arayuz.gorunum import koltuk_haritasi
-from bilet_sistemi.hatalar import BiletSistemiHatasi, GecersizSecimHatasi
+from bilet_sistemi.hatalar import BiletSistemiHatasi, GecersizIslemHatasi, GecersizSecimHatasi
 from bilet_sistemi.uygulama import EKSTRALAR, TARIFELER, BiletGisesi
 
 Girdi = Callable[[str], str]
 Cikti = Callable[[str], None]
+
+
+def sayi_mi(metin: str) -> bool:
+    """Yalnızca 0-9 rakamlarından oluşuyorsa True (ör. '²' gibi karakterleri reddeder)."""
+    return metin.isascii() and metin.isdigit()
 
 MENU = """
 ========= BİLET GİŞESİ =========
@@ -53,7 +58,7 @@ class KomutSatiriArayuzu:
             self._yaz(MENU)
             try:
                 secim = self._sor("Seçiminiz: ")
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 break
             if secim == "0":
                 break
@@ -65,7 +70,7 @@ class KomutSatiriArayuzu:
                 islem()
             except BiletSistemiHatasi as hata:
                 self._yaz(f"Hata: {hata}")
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 break
         self._yaz("Güle güle!")
 
@@ -92,7 +97,9 @@ class KomutSatiriArayuzu:
         etkinlik = self._etkinlik_sor()
         self._yaz(koltuk_haritasi(etkinlik.salon))
         koltuk_kodu = self._sor("Koltuk kodu (ör. A-1-5): ")
-        self.gise.koltuk_bul(etkinlik.kod, koltuk_kodu)
+        koltuk = self.gise.koltuk_bul(etkinlik.kod, koltuk_kodu)
+        if not koltuk.satilabilir_mi():
+            raise GecersizIslemHatasi(f"{koltuk.kod}: koltuk satılamaz (durum: {koltuk.durum_adi}).")
 
         tarife = self._listeden_sec("Tarife", list(TARIFELER.items()))
         ekstralar = self._ekstra_sec()
@@ -118,7 +125,7 @@ class KomutSatiriArayuzu:
 
     def satis_iptal(self) -> None:
         metin = self._sor("İptal edilecek satış no: ")
-        if not metin.isdigit():
+        if not sayi_mi(metin):
             raise GecersizSecimHatasi("Satış numarası bir sayı olmalı.")
         satis = self.gise.satis_iptal(int(metin))
         self._yaz(f"{satis.no} numaralı satış iptal edildi, {satis.koltuk.kod} koltuğu yeniden satışta.")
@@ -145,7 +152,7 @@ class KomutSatiriArayuzu:
         for i, (_, (ad, _)) in enumerate(secenekler, start=1):
             self._yaz(f"  {i}) {ad}")
         metin = self._sor(f"{baslik} no: ")
-        if not metin.isdigit() or not 1 <= int(metin) <= len(secenekler):
+        if not sayi_mi(metin) or not 1 <= int(metin) <= len(secenekler):
             raise GecersizSecimHatasi(f"1-{len(secenekler)} arası bir {baslik.lower()} numarası girin.")
         return secenekler[int(metin) - 1][0]
 
@@ -160,7 +167,7 @@ class KomutSatiriArayuzu:
         kodlar = []
         for parca in metin.split(","):
             parca = parca.strip()
-            if not parca.isdigit() or not 1 <= int(parca) <= len(secenekler):
+            if not sayi_mi(parca) or not 1 <= int(parca) <= len(secenekler):
                 raise GecersizSecimHatasi(f"'{parca}' geçerli bir ekstra numarası değil.")
             kodlar.append(secenekler[int(parca) - 1][0])
         return kodlar

@@ -51,6 +51,13 @@ class KoltukDurumTestleri(unittest.TestCase):
         with self.assertRaises(GecersizIslemHatasi):
             self.koltuk.tut()
 
+    def test_satilabilir_mi_bos_ve_tutulduda_evet_satildida_hayir(self) -> None:
+        self.assertTrue(self.koltuk.satilabilir_mi())
+        self.koltuk.tut()
+        self.assertTrue(self.koltuk.satilabilir_mi())
+        self.koltuk.sat()
+        self.assertFalse(self.koltuk.satilabilir_mi())
+
     def test_bos_koltuk_birakilamaz_ve_iptal_edilemez(self) -> None:
         with self.assertRaises(GecersizIslemHatasi):
             self.koltuk.birak()

@@ -88,6 +88,19 @@ class MenuTestleri(unittest.TestCase):
         self.assertIn("Hata: '7' geçerli bir ekstra numarası değil.", cikti)
         self.assertEqual(gise.satislar(), [])
 
+    def test_rakam_benzeri_karakterler_programi_cokertmez(self) -> None:
+        _, cikti = calistir(["6", "²", "3", "K1", "A-1-1", "²", "0"])
+        self.assertIn("Hata: Satış numarası bir sayı olmalı.", cikti)
+        self.assertIn("Hata: 1-4 arası bir tarife numarası girin.", cikti)
+        self.assertIn("Güle güle!", cikti)
+
+    def test_satilmis_koltuk_icin_teklif_verilmez(self) -> None:
+        gise, cikti = calistir(["3", "K1", "A-1-1", "1", "", "E",
+                                "3", "K1", "A-1-1", "0"])
+        self.assertIn("Hata: A-1-1: koltuk satılamaz (durum: Satıldı).", cikti)
+        self.assertEqual(cikti.count("Tutar : "), 1)
+        self.assertEqual(len(gise.satislar()), 1)
+
     def test_satis_numarasi_sayi_olmali(self) -> None:
         _, cikti = calistir(["6", "abc", "0"])
         self.assertIn("Hata: Satış numarası bir sayı olmalı.", cikti)

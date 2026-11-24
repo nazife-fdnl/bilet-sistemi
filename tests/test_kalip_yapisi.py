@@ -55,7 +55,8 @@ ROL_YORUMLARI = {
                        ["Product", "ConcreteProduct", "Creator", "ConcreteCreator"]),
     "Strategy": (["fiyat/strateji.py", "etkinlik/bilet.py"],
                  ["Strategy", "ConcreteStrategy", "Context"]),
-    "Decorator": (["ekstra/hizmet.py"], ["Decorator", "ConcreteDecorator"]),
+    "Decorator": (["ekstra/hizmet.py", "etkinlik/bilet.py"],
+                  ["Component", "ConcreteComponent", "Decorator", "ConcreteDecorator"]),
 }
 
 

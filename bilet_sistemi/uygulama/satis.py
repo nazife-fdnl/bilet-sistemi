@@ -17,17 +17,15 @@ class Satis:
 
     Kalıp rolü değildir. 'bilet' alanı ekstralarla sarılmış (Decorator) bilet
     olabileceğinden koltuğa bilet üzerinden değil, bu kayıttaki 'koltuk'
-    alanından ulaşılır.
+    alanından ulaşılır. 'tutar' satış anında sabitlenir; fiyat kuralları
+    sonradan değişse bile geçmiş satışın tutarı ve raporlar değişmez.
     """
 
     no: int
     etkinlik: Etkinlik
     koltuk: Koltuk
     bilet: Bilet
+    tutar: Decimal
     tarife: str
     ekstralar: List[str] = field(default_factory=list)
     iptal_edildi: bool = False
-
-    @property
-    def tutar(self) -> Decimal:
-        return self.bilet.fiyat()

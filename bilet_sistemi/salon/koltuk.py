@@ -48,6 +48,9 @@ class Koltuk(SalonBileseni):
     def musait_mi(self) -> bool:
         return self._durum.musait_mi()
 
+    def satilabilir_mi(self) -> bool:
+        return self._durum.satilabilir_mi()
+
     def tut(self) -> None:
         self._durum.tut(self)
 

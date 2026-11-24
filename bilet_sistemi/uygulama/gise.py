@@ -22,7 +22,9 @@ from bilet_sistemi.salon import Koltuk
 from bilet_sistemi.uygulama.etkinlik import Etkinlik
 from bilet_sistemi.uygulama.satis import Satis
 
-# Tarife kodu → (gösterilecek ad, stratejiyi üreten fonksiyon).
+# Tarife kodu → (gösterilecek ad, strateji nesnesini üreten fonksiyon).
+# Lambdalar yalnızca menüdeki kodu bir FiyatStratejisi nesnesine çevirir;
+# Strategy rolünü üstlenmez (roller fiyat/strateji.py'deki sınıflardadır).
 # Erken kayıt indirimi etkinliğe kalan güne göre çalıştığı için
 # fonksiyonlar etkinliği ve bugünün tarihini alır.
 TarifeUretici = Callable[[Etkinlik, date], FiyatStratejisi]
@@ -102,11 +104,16 @@ class BiletGisesi:
         return uretici(etkinlik, self.bugun)
 
     @staticmethod
-    def ekstralari_ekle(bilet: Bilet, ekstralar: Sequence[str]) -> Bilet:
-        """Seçilen ekstraları verilen sırayla biletin etrafına sarar (Decorator)."""
+    def ekstralari_dogrula(ekstralar: Sequence[str]) -> None:
         for kod in ekstralar:
             if kod not in EKSTRALAR:
                 raise GecersizSecimHatasi(f"'{kod}' diye bir ekstra hizmet yok.")
+
+    @classmethod
+    def ekstralari_ekle(cls, bilet: Bilet, ekstralar: Sequence[str]) -> Bilet:
+        """Seçilen ekstraları verilen sırayla biletin etrafına sarar (Decorator)."""
+        cls.ekstralari_dogrula(ekstralar)
+        for kod in ekstralar:
             _, dekorator = EKSTRALAR[kod]
             bilet = dekorator(bilet)
         return bilet
@@ -115,7 +122,7 @@ class BiletGisesi:
                       tarife: str = "standart", ekstralar: Sequence[str] = ()) -> Bilet:
         """Satış yapmadan, koltuğun durumunu değiştirmeden fiyat hesaplar."""
         etkinlik = self.etkinlik_bul(etkinlik_kodu)
-        koltuk = self.koltuk_bul(etkinlik_kodu, koltuk_kodu)
+        koltuk = self.koltuk_bul(etkinlik.kod, koltuk_kodu)
         bilet = etkinlik.olusturucu.bilet_olustur(koltuk, self.strateji_olustur(etkinlik, tarife))
         return self.ekstralari_ekle(bilet, ekstralar)
 
@@ -125,15 +132,16 @@ class BiletGisesi:
                  tarife: str = "standart", ekstralar: Sequence[str] = ()) -> Satis:
         """Bilet satar. Koltuk boş veya tutulmuş olmalıdır."""
         etkinlik = self.etkinlik_bul(etkinlik_kodu)
-        koltuk = self.koltuk_bul(etkinlik_kodu, koltuk_kodu)
+        koltuk = self.koltuk_bul(etkinlik.kod, koltuk_kodu)
+        if etkinlik.kalan_gun(self.bugun) < 0:
+            raise GecersizIslemHatasi(f"{etkinlik.ad} etkinliği geçmişte kaldı; bilet satılamaz.")
         strateji = self.strateji_olustur(etkinlik, tarife)
         # Ekstra kodları satıştan önce denetlenir; geçersizse koltuk satılmaz.
-        for kod in ekstralar:
-            if kod not in EKSTRALAR:
-                raise GecersizSecimHatasi(f"'{kod}' diye bir ekstra hizmet yok.")
+        self.ekstralari_dogrula(ekstralar)
         bilet = etkinlik.olusturucu.bilet_sat(koltuk, strateji)
         bilet = self.ekstralari_ekle(bilet, ekstralar)
-        satis = Satis(self._sonraki_no, etkinlik, koltuk, bilet, strateji.ad, list(ekstralar))
+        satis = Satis(self._sonraki_no, etkinlik, koltuk, bilet, bilet.fiyat(), strateji.ad,
+                      list(ekstralar))
         self._sonraki_no += 1
         self._satislar.append(satis)
         return satis
