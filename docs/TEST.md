@@ -16,7 +16,7 @@ Beklenen sonucun sonu (süre değişebilir):
 
 ```
 ----------------------------------------------------------------------
-Ran 81 tests in 0.012s
+Ran 90 tests in 0.025s
 
 OK
 ```
@@ -35,19 +35,19 @@ python3 -m unittest tests.test_gise.SatisTestleri.test_tiyatro_ogrenci   # tek b
 
 | Dosya | Kapsam | Test | Ne doğrulanıyor |
 | --- | --- | --- | --- |
-| `tests/test_durum.py` | State | 9 | Boş → Tutuldu → Satıldı geçişleri; geçersiz işlemlerin `GecersizIslemHatasi` vermesi |
-| `tests/test_salon.py` | Composite | 6 | Kapasite ve boş koltuğun her seviyede toplanması; tek koltuk ile grubun aynı arayüzü kullanması; ağaca blok eklenmesi |
+| `tests/test_durum.py` | State | 10 | Boş → Tutuldu → Satıldı geçişleri; `satilabilir_mi`; geçersiz işlemlerin `GecersizIslemHatasi` vermesi |
+| `tests/test_salon.py` | Composite | 9 | Kapasite ve boş koltuğun her seviyede toplanması; tek koltuk ile grubun aynı arayüzü kullanması; ekleme ve çıkarma; grubun kendi içine ve aynı bileşenin iki kez eklenememesi |
 | `tests/test_etkinlik.py` | Factory Method | 6 | Her oluşturucunun kendi bilet türünü üretmesi; konser, tiyatro, konferans fiyat kuralları; satılmış koltuğa bilet verilmemesi |
 | `tests/test_fiyat.py` | Strategy | 8 | Dört tarife; stratejinin tür fiyatından sonra uygulanması; çalışma anında değiştirilmesi |
-| `tests/test_ekstra.py` | Decorator | 7 | Ekstraların fiyata ve açıklamaya eklenmesi; iç içe ve tekrarlı sarma; sarma sırasının etkisi; indirimin ekstralara uygulanmaması |
-| `tests/test_gise.py` | Uygulama (uçtan uca) | 25 | Örnek veri; satış, fiyat teklifi, tutma/bırakma, iptal, rapor; geçersiz seçimde koltuğun satılmaması; hata türleri |
-| `tests/test_arayuz.py` | Arayüz | 13 | Menü akışları, onay, hata mesajları, koltuk haritası, `--demo` ve `--kaliplar` senaryoları |
-| `tests/test_kalip_yapisi.py` | Kalıp yapısı | 7 | Arayüzlerin soyut `abc.ABC` olması, somut sınıfların doğru arayüzden türemesi, rol yorumlarının kodda bulunması |
-| **Toplam** | | **81** | |
+| `tests/test_ekstra.py` | Decorator | 8 | Ekstraların fiyata ve açıklamaya eklenmesi; iç içe ve tekrarlı sarma; sarma sırasının etkisi; indirimin ekstralara uygulanmaması; 40 katmanlı sarmanın doğru ve hızlı hesaplanması |
+| `tests/test_gise.py` | Uygulama (uçtan uca) | 27 | Örnek veri; satış, fiyat teklifi, tutma/bırakma, iptal, rapor; satış tutarının sabit kalması; geçmiş etkinliğe satış engeli; geçersiz seçimde koltuğun satılmaması; hata türleri |
+| `tests/test_arayuz.py` | Arayüz | 15 | Menü akışları, onay, hata mesajları, `²` gibi karakterlerde çökmeme, satılmış koltuğa teklif verilmemesi, koltuk haritası, `--demo` ve `--kaliplar` senaryoları |
+| `tests/test_kalip_yapisi.py` | Kalıp yapısı | 7 | Arayüzlerin soyut `abc.ABC` olması, somut sınıfların doğru arayüzden türemesi, beş kalıbın bütün rol yorumlarının (Decorator'ın Component rolleri dahil) kodda bulunması |
+| **Toplam** | | **90** | |
 
 ## 4. Örnek senaryolar ve beklenen değerler
 
-Testlerdeki hesaplar, sonuçları elle kontrol edebilmeniz için:
+Testlerdeki hesaplar, sonuçları elle kontrol edebilmeniz için (program tutarları noktalı yazar: `1045.00`):
 
 | Senaryo | Hesap | Beklenen |
 | --- | --- | --- |

@@ -1,8 +1,13 @@
 # Gereksinim Dokümanı
 
 Bu doküman sistemin **ne yapması gerektiğini** tanımlar. Kod silinse bile bu doküman,
-[TASARIM.md](TASARIM.md) ve `tests/` klasöründeki testler birlikte projeyi aynı davranışla
-yeniden kurmaya yeter. Kurallardaki her sayı testlerde doğrulanır.
+[TASARIM.md](TASARIM.md) (sınıflar, imzalar, kalıplar) ve `tests/` klasöründeki testler
+birlikte projeyi aynı davranışla yeniden kurmaya yeter. Kurallardaki her sayı ve metin
+testlerde doğrulanır.
+
+Yazım kuralı: Bu dokümanda tutarlar okunaklılık için `1045,00 TL` diye yazılabilir;
+**program çıktısında tutarlar `str(Decimal)` biçimindedir, yani noktalıdır: `1045.00 TL`.**
+Ters tırnak içindeki metinler programın birebir yazdığı metinlerdir.
 
 ## 1. Amaç ve kapsam
 
@@ -18,15 +23,17 @@ tarife ve ekstra hizmet seçerek bilet satar, satışı iptal eder ve satış ra
 
 | Kavram | Tanım |
 | --- | --- |
-| Salon | Bloklardan oluşan ağaç: Salon → Blok → Sıra → Koltuk. |
-| Koltuk kodu | `Blok-Sıra-Numara`, örn. `B-1-3`. Kodlar büyük/küçük harf ve baştaki/sondaki boşluk duyarsızdır. |
+| Salon | Bloklardan oluşan ağaç: Salon → Blok → Sıra → Koltuk. Salon, blok ve sıra `KoltukGrubu` nesneleridir; `tur` alanı sırasıyla `"Salon"`, `"Blok"`, `"Sıra"`. |
+| Blok adı | Tek harf veya kısa ad, örn. `A`. Haritada `Blok A` diye yazılır. |
+| Sıra adı | `Blok-SıraNo`, örn. `A-2`. Sıra numarası 1'den başlar. |
+| Koltuk kodu | `Blok-Sıra-Numara`, örn. `B-1-3`. Gişe işlemlerinde kodlar büyük/küçük harf ve baştaki/sondaki boşluk duyarsızdır. |
 | Koltuk kategorisi | `standart` veya `vip`. Bir blok VIP ise içindeki bütün koltuklar `vip`'tir. |
-| Koltuk durumu | `Boş`, `Tutuldu`, `Satıldı`. |
+| Koltuk durumu | `Boş`, `Tutuldu`, `Satıldı` (`Koltuk.durum_adi`). |
 | Taban fiyat | Etkinliğin tanımlandığı temel fiyat (TL). |
 | Tür fiyatı | Etkinlik türünün kuralı uygulanmış, indirimsiz fiyat. |
-| Tarife | Tür fiyatına uygulanan indirim kuralı. |
-| Ekstra hizmet | Bilete eklenen ücretli hizmet. |
-| Satış | Numaralı satış kaydı: etkinlik, koltuk, bilet, tarife adı, ekstra kodları, iptal bilgisi. |
+| Tarife | Tür fiyatına uygulanan indirim kuralı (kod: `standart`, `ogrenci`, `erken`, `kurumsal`). |
+| Ekstra hizmet | Bilete eklenen ücretli hizmet (kod: `vip`, `otopark`, `sigorta`). |
+| Satış | Numaralı satış kaydı (`Satis`): `no`, `etkinlik`, `koltuk`, `bilet`, `tutar`, `tarife` (tarifenin **adı**, örn. `"Erken kayıt"`), `ekstralar` (ekstra **kodları** listesi, örn. `["vip", "sigorta"]`), `iptal_edildi`. |
 
 ## 3. İş kuralları
 
@@ -34,13 +41,13 @@ tarife ve ekstra hizmet seçerek bilet satar, satışı iptal eder ve satış ra
 
 Her koltuk `Boş` başlar. İzin verilen geçişler:
 
-| Durum \ İşlem | `tut()` | `sat()` | `birak()` | `iptal_et()` | Satışa açık mı (`musait_mi`) |
-| --- | --- | --- | --- | --- | --- |
-| **Boş** | → Tutuldu | → Satıldı | hata | hata | Evet |
-| **Tutuldu** | hata | → Satıldı | → Boş | hata | Hayır |
-| **Satıldı** | hata | hata | hata | → Boş | Hayır |
+| Durum \ İşlem | `tut()` | `sat()` | `birak()` | `iptal_et()` | `musait_mi()` | `satilabilir_mi()` |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Boş** | → Tutuldu | → Satıldı | hata | hata | True | True |
+| **Tutuldu** | hata | → Satıldı | → Boş | hata | False | True |
+| **Satıldı** | hata | hata | hata | → Boş | False | False |
 
-"hata" = `GecersizIslemHatasi`, mesaj koltuk koduyla başlar. Mesajlar:
+"hata" = `GecersizIslemHatasi`. Mesajlar (`{kod}` koltuk kodu):
 
 | Durum | İşlem | Mesaj |
 | --- | --- | --- |
@@ -55,11 +62,17 @@ Her koltuk `Boş` başlar. İzin verilen geçişler:
 ### K2. Salon
 
 - Kapasite ve boş koltuk sayısı salon, blok, sıra ve tek koltuk için aynı yöntemle sorulur;
-  üst seviye, alt seviyelerin toplamıdır. Tek koltuğun kapasitesi 1, boşsa boş sayısı 1'dir.
+  üst seviye, alt seviyelerin toplamıdır. Tek koltuğun kapasitesi 1, `Boş` ise boş sayısı 1'dir.
 - "Boş" sayılan koltuk yalnızca `Boş` durumundakidir (tutulan koltuk boş sayılmaz).
-- Salona sonradan yeni blok veya koltuk eklenebilir.
-- `salon_olustur(ad, {blok: (sıra_sayısı, sıra_başına_koltuk)}, vip_bloklar)` ağacı kurar.
-  Sıra adı `Blok-Sıra` (örn. `A-2`), sıra numarası 1'den başlar.
+- Gruba sonradan bileşen eklenebilir (`ekle`) ve çıkarılabilir (`cikar`).
+- Bir grup kendi içine (doğrudan veya alt gruplarının içine) eklenemez:
+  `{grup}: bir grup kendi içine eklenemez.` Aynı bileşen bir gruba iki kez eklenemez:
+  `{grup}: {bileşen} zaten bu grupta.` (ikisi de `GecersizIslemHatasi`).
+- `KoltukGrubu.koltuk_bul(kod)` koltuk yoksa **`None`** döndürür; gişe bunu `BulunamadiHatasi`'na çevirir (K10).
+- `salon_olustur(ad, {blok: (sıra_sayısı, sıra_başına_koltuk)}, vip_bloklar)` ağacı kurar
+  (blok sırası sözlük sırasıdır).
+- Metin gösterimleri: `str(KoltukGrubu)` = `{tur}({ad}, {boş}/{kapasite} boş)`, örn.
+  `Salon(Kültür Merkezi, 49/52 boş)`; `str(Koltuk)` = `Koltuk({kod}, {durum})`, örn. `Koltuk(A-5-8, Tutuldu)`.
 
 ### K3. Tür fiyatı (etkinlik türüne göre)
 
@@ -67,53 +80,61 @@ Her koltuk `Boş` başlar. İzin verilen geçişler:
 | --- | --- |
 | Konser | VIP koltuk: taban × 2,0. Standart koltuk: taban. |
 | Tiyatro | Sıra no ≤ 3: taban × 1,25. Diğer sıralar: taban. |
-| Konferans | Her koltuk taban fiyat. Açıklamada "Katılım sertifikası dahil" yazar. |
+| Konferans | Her koltuk taban fiyat. |
 
-Bilet açıklamaları:
+Bilet açıklamaları (`aciklama()`):
 - Konser: `Konser: {etkinlik} | Koltuk {kod} ({kategori})`
 - Tiyatro: `Tiyatro: {etkinlik} | Koltuk {kod} (sıra {sıra_no})`
 - Konferans: `Konferans: {etkinlik} | Koltuk {kod} | Katılım sertifikası dahil`
 
 ### K4. Tarifeler (tür fiyatına uygulanır)
 
-| Kod | Ad | Kural |
-| --- | --- | --- |
-| `standart` | Standart | İndirim yok. Tarife verilmezse varsayılan budur. |
-| `ogrenci` | Öğrenci | %30 indirim. |
-| `erken` | Erken kayıt | Etkinliğe **en az 30 gün** kaldıysa %20 indirim; daha azsa indirim yok. |
-| `kurumsal` | Kurumsal | %15 indirim. |
+Tablo sırası menüdeki sıradır (menü no = sıra).
 
-Tarife bir biletin üzerinde sonradan değiştirilebilir; fiyat yeni tarifeye göre hesaplanır.
+| Menü no | Kod | Ad (`strateji.ad`, `Satis.tarife`) | Menüde görünen | Kural |
+| --- | --- | --- | --- | --- |
+| 1 | `standart` | `Standart` | `Standart` | İndirim yok. Tarife verilmezse varsayılan budur. |
+| 2 | `ogrenci` | `Öğrenci` | `Öğrenci (%30 indirim)` | %30 indirim. |
+| 3 | `erken` | `Erken kayıt` | `Erken kayıt (30+ gün kala %20 indirim)` | Etkinliğe **en az 30 gün** kaldıysa %20 indirim; daha azsa indirim yok. |
+| 4 | `kurumsal` | `Kurumsal` | `Kurumsal (%15 indirim)` | %15 indirim. |
+
+Tarife bir biletin üzerinde sonradan değiştirilebilir (`bilet.fiyat_stratejisi = ...`); fiyat yeni tarifeye göre hesaplanır.
 
 ### K5. Ekstra hizmetler (tarifeden sonra eklenir, indirime girmez)
 
-| Kod | Açıklamaya eklenen | Ücret |
-| --- | --- | --- |
-| `vip` | `+ VIP giriş` | +150 TL |
-| `otopark` | `+ Otopark` | +75 TL |
-| `sigorta` | `+ İptal sigortası` | Sardığı tutarın %10'u |
+| Menü no | Kod | Menüde görünen | Açıklamaya eklenen | Ücret |
+| --- | --- | --- | --- | --- |
+| 1 | `vip` | `VIP giriş (+150 TL)` | ` + VIP giriş` | +150 TL |
+| 2 | `otopark` | `Otopark (+75 TL)` | ` + Otopark` | +75 TL |
+| 3 | `sigorta` | `İptal sigortası (+%10)` | ` + İptal sigortası` | Sardığı tutarın %10'u |
 
 - Ekstralar seçildiği **sırayla** eklenir; aynı ekstra birden fazla eklenebilir.
 - Sıra sigorta ücretini değiştirir: `sigorta` en sonda ise önceki ekstraları da sigortalar.
   Örnek (500 TL bilet): `vip, sigorta` → (500 + 150) × 1,10 = 715; `sigorta, vip` → 500 × 1,10 + 150 = 700.
+- Çok sayıda ekstra iç içe eklendiğinde de hesap hızlıdır (her katman içteki fiyatı bir kez sorar).
 
 ### K6. Fiyat hesabı ve yuvarlama
 
-`fiyat = yuvarla( tarife( tür_fiyatı ) )`, sonra her ekstra için `fiyat = yuvarla( fiyat + ekstra_ücreti )`.
-Tutarlar `Decimal` ile hesaplanır; `yuvarla` iki basamağa, yarımlar yukarı (ROUND_HALF_UP).
+`fiyat = yuvarla( tarife( tür_fiyatı ) )`, sonra her ekstra için
+`fiyat = yuvarla( iç_fiyat + ekstra_ücreti(iç_fiyat) )`. Sigorta ücreti ayrıca yuvarlanmaz;
+yalnızca toplam yuvarlanır. Tutarlar `Decimal` ile hesaplanır; `yuvarla` iki basamağa,
+yarımlar yukarı (ROUND_HALF_UP).
 
 ### K7. Satış
 
 - Satış yalnızca `Boş` veya `Tutuldu` koltuğa yapılır; sonunda koltuk `Satıldı` olur.
+- Etkinlik tarihi geçmişse (`kalan_gun < 0`) satış yapılmaz:
+  `{etkinlik} etkinliği geçmişte kaldı; bilet satılamaz.` (`GecersizIslemHatasi`).
 - Satış numaraları 1'den başlar, her başarılı satışta 1 artar; iptal numarayı geri vermez.
 - Tarife veya ekstra kodu geçersizse (`GecersizSecimHatasi`) **koltuk satılmaz, kayıt oluşmaz.**
 - Satılmış koltuğa satış `GecersizIslemHatasi` verir, kayıt oluşmaz.
+- Satışın **tutarı satış anında sabitlenir** (`Satis.tutar`); fiyat kuralları sonradan değişse de geçmiş satış ve rapor değişmez.
 - **Fiyat teklifi** satış yapmadan aynı fiyatı hesaplar; koltuğun durumunu değiştirmez.
 
 ### K8. İptal
 
 - Satış iptal edilince koltuk `Boş` olur, kayıt `iptal_edildi = True` işaretlenir.
-- İptal edilmiş satış tekrar iptal edilemez (`GecersizIslemHatasi`).
+- İptal edilmiş satış tekrar iptal edilemez: `{no} numaralı satış zaten iptal edilmiş.` (`GecersizIslemHatasi`).
 - İptal edilen koltuk yeniden satılabilir.
 
 ### K9. Rapor
@@ -124,13 +145,17 @@ Tutarlar `Decimal` ile hesaplanır; `yuvarla` iki basamağa, yarımlar yukarı (
 
 ### K10. Hatalar
 
-| Hata | Ne zaman |
-| --- | --- |
-| `GecersizIslemHatasi` | Koltuk durumunda yapılamayan işlem, iptal edilmiş satışı tekrar iptal. |
-| `BulunamadiHatasi` | Olmayan etkinlik (`'{kod}' kodlu etkinlik yok.`), koltuk, satış (`{no} numaralı satış yok.`). |
-| `GecersizSecimHatasi` | Tanımsız tarife veya ekstra, menüde geçersiz numara. |
-
 Hepsi `BiletSistemiHatasi`'ndan türer.
+
+| Hata | Mesaj | Ne zaman |
+| --- | --- | --- |
+| `GecersizIslemHatasi` | K1, K2, K7, K8'deki mesajlar | Durumda yapılamayan işlem, geçersiz ağaç ekleme, geçmiş etkinlik, ikinci iptal |
+| `BulunamadiHatasi` | `'{kod}' kodlu etkinlik yok.` | Olmayan etkinlik kodu |
+| `BulunamadiHatasi` | `{etkinlik} salonunda '{kod}' kodlu koltuk yok.` | Olmayan koltuk kodu (gişe) |
+| `BulunamadiHatasi` | `{no} numaralı satış yok.` | Olmayan satış no |
+| `GecersizSecimHatasi` | `'{kod}' diye bir tarife yok.` | Tanımsız tarife kodu |
+| `GecersizSecimHatasi` | `'{kod}' diye bir ekstra hizmet yok.` | Tanımsız ekstra kodu |
+| `GecersizSecimHatasi` | Bölüm 5'teki menü mesajları | Menüde geçersiz numara |
 
 ## 4. Örnek veri (`ornek_gise(bugun)`)
 
@@ -145,31 +170,81 @@ tiyatroda geçersizdir. `bugun` verilmezse sistem tarihi kullanılır.
 
 ## 5. Kullanıcı arayüzü
 
-`python3 main.py` menüyü açar:
+`python3 main.py` önce `Etkinlik Bilet Satış ve Rezervasyon Sistemi` yazar, sonra menüyü gösterir:
 
-| No | İşlem | Sorduğu bilgiler |
-| --- | --- | --- |
-| 1 | Etkinlikleri listele | — (kod, tür, ad, tarih, kalan gün, boş/kapasite) |
-| 2 | Salon ve koltuk haritası | etkinlik kodu |
-| 3 | Bilet satın al | etkinlik kodu → (harita gösterilir) → koltuk kodu → tarife no (1-4) → ekstra no'ları (virgülle, boş = yok) → teklif gösterilir → onay `E`/`H` |
-| 4 | Koltuk tut | etkinlik kodu, koltuk kodu |
-| 5 | Tutulan koltuğu bırak | etkinlik kodu, koltuk kodu |
-| 6 | Satış iptal et | satış no |
-| 7 | Satışlar ve rapor | — (iptaller dahil liste, etkinlik özeti, toplam ciro) |
-| 0 | Çıkış | — |
+```
+========= BİLET GİŞESİ =========
+1) Etkinlikleri listele
+2) Salon ve koltuk haritası
+3) Bilet satın al
+4) Koltuk tut
+5) Tutulan koltuğu bırak
+6) Satış iptal et
+7) Satışlar ve rapor
+0) Çıkış
+================================
+Seçiminiz:
+```
 
-- Koltuk haritası simgeleri: `.` boş, `T` tutuldu, `X` satıldı; blok başlığında kategori ve boş/kapasite.
-- Hatalar `Hata: {mesaj}` olarak yazılır, program menüye döner (çökmez).
-- Menüde 0-7 dışı seçim: `Geçersiz seçim, 0-7 arası bir sayı girin.`
-- Tarife numarası geçersiz: `1-4 arası bir tarife numarası girin.`
-- Ekstra numarası geçersiz: `'{parça}' geçerli bir ekstra numarası değil.`
-- Satış no sayı değil: `Satış numarası bir sayı olmalı.`
-- Onay `E` değilse: `Satın alma iptal edildi.`, satış yapılmaz.
-- Girdi bittiğinde (EOF) veya `0` seçilince `Güle güle!` yazıp çıkar.
+| No | İşlem | Sorular (sırasıyla) | Başarı çıktısı |
+| --- | --- | --- | --- |
+| 1 | Etkinlikleri listele | — | Her etkinlik için kod, tür, ad, tarih (ISO), kalan gün, `boş/kapasite` |
+| 2 | Salon ve koltuk haritası | `Etkinlik kodu (ör. K1): ` | `{ad} ({tür})` satırı ve koltuk haritası |
+| 3 | Bilet satın al | `Etkinlik kodu (ör. K1): ` → (harita) → `Koltuk kodu (ör. A-1-5): ` → tarife listesi, `Tarife no: ` → ekstra listesi, `Ekstra no(lar): ` (virgülle; boş = yok) → teklif → `Onaylıyor musunuz? (E/H): ` | Teklif: `Bilet : {açıklama}` ve `Tutar : {tutar} TL`; onaydan sonra `Satış tamamlandı. Satış no: {no}  Tutar: {tutar} TL` |
+| 4 | Koltuk tut | `Etkinlik kodu (ör. K1): `, `Koltuk kodu: ` | `{kod} koltuğu tutuldu.` |
+| 5 | Tutulan koltuğu bırak | `Etkinlik kodu (ör. K1): `, `Koltuk kodu: ` | `{kod} koltuğu bırakıldı, yeniden satışta.` |
+| 6 | Satış iptal et | `İptal edilecek satış no: ` | `{no} numaralı satış iptal edildi, {kod} koltuğu yeniden satışta.` |
+| 7 | Satışlar ve rapor | — | Satış yoksa `Henüz satış yok.`; varsa her satış (iptaller dahil, durum `Geçerli` / `İPTAL`); `Etkinlik bazında:` özeti; `Toplam ciro: {tutar} TL` |
+| 0 | Çıkış | — | `Güle güle!` |
 
-Diğer çalıştırma biçimleri:
-- `python3 main.py --demo`: Menüyü hazır bir kullanıcı senaryosuyla çalıştırır (3 satış, 1 hatalı işlem, 1 iptal, rapor; toplam ciro 507,50 TL).
-- `python3 main.py --kaliplar`: Beş kalıbı doğrudan sınıflarıyla tek tek gösterir.
+Satın almada koltuk satılamaz durumdaysa (`Satıldı`) teklif verilmez, tarife sorulmaz:
+`{kod}: koltuk satılamaz (durum: Satıldı).` (`GecersizIslemHatasi`). Onay cevabı büyük/küçük
+harf duyarsızdır; `E` dışındaki her cevapta `Satın alma iptal edildi.` yazılır, satış yapılmaz.
+
+**Hatalı girişler.** Her hatalı giriş `Hata: {mesaj}` olarak yazılır, **o işlem sona erer ve
+ana menüye dönülür** (soru tekrar sorulmaz, program çökmez). Menü mesajları:
+
+| Durum | Yazılan |
+| --- | --- |
+| Menüde 0-7 dışı seçim | `Geçersiz seçim, 0-7 arası bir sayı girin.` (`Hata:` öneki yok) |
+| Tarife numarası 1-4 dışı veya sayı değil | `Hata: 1-4 arası bir tarife numarası girin.` |
+| Ekstra numarası 1-3 dışı veya sayı değil | `Hata: '{parça}' geçerli bir ekstra numarası değil.` |
+| Satış no sayı değil | `Hata: Satış numarası bir sayı olmalı.` |
+
+"Sayı" yalnızca ASCII rakamlardır (`0-9`); `²` gibi karakterler sayı sayılmaz.
+Girdi bittiğinde (EOF) veya Ctrl-C'de program `Güle güle!` yazıp çıkar.
+
+**Koltuk haritası** (`koltuk_haritasi(salon)`), örnek (`.` boş, `T` tutuldu, `X` satıldı):
+
+```
+Kongre Salonu  |  boş 49 / 50
+Simgeler: . boş   T tutuldu   X satıldı
+
+Blok A (standart)  boş 49 / 50
+         1  2  3  4  5  6  7  8  9 10
+  A-1    .  .  .  .  T  .  .  .  .  .
+  A-2    .  .  .  .  .  .  .  .  .  .
+```
+
+Her sıra satırı sıra adıyla başlar ve ardından yalnızca simgeler gelir. Blok başlığındaki
+kategori bloğun ilk koltuğunun kategorisidir.
+
+### Demo modları
+
+`python3 main.py --demo` menüyü `ornek_gise()` ile şu cevaplarla çalıştırır
+(`KULLANICI_SENARYOSU`): listele; K1 haritası; **K1 B-1-3** erken kayıt + VIP giriş + sigorta
+(1045.00, satış 1); **T1 P-2-4** öğrenci (262.50, satış 2); F1 A-1-5 tut; **F1 A-1-5** kurumsal +
+otopark (245.00, satış 3); K1 B-1-3 tutmayı dene → `Hata: B-1-3: satılmış koltuk tutulamaz.`;
+satış 1'i iptal et; rapor (`Toplam ciro: 507.50 TL`); K1 haritası; `0`.
+Cevaplar `senaryo_girdisi` ile soruyla birlikte ekrana yazılır (`Seçiminiz: 1`).
+
+`python3 main.py --kaliplar` beş kalıbı doğrudan sınıflarıyla gösterir:
+1. `salon_olustur("Kültür Merkezi", {"A": (5, 8), "B": (2, 6)}, vip_bloklar=["B"])` (52 koltuk) yazdırılır.
+2. `KonserOlusturucu("Rock Gecesi", 500)` ile A-3-4 standart (500.00), A-3-5 öğrenci (350.00), B-1-1 erken kayıt 45 gün (800.00) satılır.
+3. `TiyatroOlusturucu("Hamlet", 300)` ile A-1-1 kurumsal satılır (300 × 1,25 × 0,85 = 318.75).
+4. A-3-4 bileti `IptalSigortasi(Otopark(VipGiris(bilet)))` ile sarılır: `Toplam: 797.50 TL`.
+5. A-5-8 tutulup bırakılır; satılmış A-3-4'e tekrar satış denenir (hata yazdırılır); A-3-4 iptal edilir.
+6. Son durum: `Salon(Kültür Merkezi, 49/52 boş)`.
 
 ## 6. Kalıp gereksinimleri (ders kuralları)
 
@@ -178,7 +253,7 @@ Diğer çalıştırma biçimleri:
 - Her rol ayrı ve anlamlı adlandırılmış bir sınıfla karşılanır; arayüzler `abc.ABC` ile yazılır.
 - Kalıplar elle yazılır (çerçeve veya kütüphanenin hazır kalıbı sayılmaz).
 - Her rol, kodda `# [Kalıp adı kalıbı] Rol: RolAdı` biçiminde yorumla işaretlenir.
-- Ayrıntılar: [TASARIM.md](TASARIM.md).
+- Ayrıntılar ve bütün imzalar: [TASARIM.md](TASARIM.md).
 
 ## 7. Gereksinim → test eşlemesi
 

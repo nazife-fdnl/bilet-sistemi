@@ -26,13 +26,11 @@ Windows'ta komut `python3` yerine `python` veya `py` olabilir.
 **Git ile:**
 
 ```bash
-git clone <depo-adresi>
+git clone https://github.com/nazife-fdnl/bilet-sistemi.git
 cd bilet-sistemi
 ```
 
-`<depo-adresi>` yerine GitHub sayfasındaki yeşil **Code** düğmesinden kopyalanan adresi yazın.
-
-**Git olmadan:** GitHub sayfasında **Code → Download ZIP** ile indirip arşivi açın,
+**Git olmadan:** <https://github.com/nazife-fdnl/bilet-sistemi> sayfasında **Code → Download ZIP** ile indirip arşivi açın,
 ardından terminalde açılan klasöre girin.
 
 ## 3. (İsteğe bağlı) Sanal ortam

@@ -6,13 +6,13 @@ Projeyi düzeltecek, yeniden kuracak veya değerlendirecek bir yapay zekâ ajan�
 ## Önce okuyun
 
 1. [docs/GEREKSINIMLER.md](docs/GEREKSINIMLER.md): Sistemin davranışı, bütün iş kuralları ve sayılar (K1-K10), arayüz metinleri.
-2. [docs/TASARIM.md](docs/TASARIM.md): Katmanlar, beş kalıbın rolleri, sınıf ve dosya adları, alternatifler ve bedeller.
-3. `tests/`: Çalıştırılabilir şartname. Kod doğruysa 81 testin hepsi geçer.
+2. [docs/TASARIM.md](docs/TASARIM.md): Katmanlar, beş kalıbın rolleri ve diyagramları, sınıf ve dosya adları, alternatifler ve bedeller; bölüm 9'da **bütün sınıfların imzaları (API özeti)**.
+3. `tests/`: Çalıştırılabilir şartname. Kod doğruysa 90 testin hepsi geçer.
 
 ## Komutlar
 
 ```bash
-python3 -m unittest -v        # bütün testler (beklenen: Ran 81 tests ... OK)
+python3 -m unittest -v        # bütün testler (beklenen: Ran 90 tests ... OK)
 python3 main.py --demo        # uçtan uca kullanıcı senaryosu, son satır "Güle güle!"
 python3 main.py --kaliplar    # beş kalıbın tek tek gösterimi
 python3 main.py               # etkileşimli menü
