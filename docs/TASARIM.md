@@ -378,13 +378,11 @@ classDiagram
 
 ## 7. Kapsam değişiklikleri kaydı
 
-Ders kuralına göre öğretim üyesi dönem içinde iki kapsam veya kural değişikliği açıklar.
-Her değişiklik bir hafta içinde karşılanır, Git'te etiketlenir ve buraya işlenir.
+Ders kuralına göre öğretim üyesi dönem içinde kapsam veya kural değişikliği açıklayabilir;
+her değişiklik bir hafta içinde karşılanır, Git'te etiketlenir ve buraya işlenir.
 
-| # | Duyuru | Değişiklik | Git etiketi | Eklenen sınıflar | Değişen sınıflar | Kolaylaştıran kalıp |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | — | Henüz duyurulmadı | — | — | — | — |
-| 2 | — | Henüz duyurulmadı | — | — | — | — |
+**Bu dönem kapsam değişikliği duyurulmadı.** Olası değişikliklerin hangi kalıpla ve hangi
+sınıflarla karşılanacağı bölüm 6'daki "Değişikliğe uyum" tablosunda gösterilmiştir.
 
 Değerlendirme sonrası yapılan iyileştirmeler (değişiklik kaydı değildir): satış tutarının
 satış anında sabitlenmesi, Decorator'da iç fiyatın bir kez hesaplanması, `satilabilir_mi`
