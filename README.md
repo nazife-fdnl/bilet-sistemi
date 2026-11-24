@@ -42,7 +42,7 @@ Gereksinim: Python 3.9 veya üstü. Ek paket gerekmez.
 
 Dosyalar, alternatifler, bedeller ve diyagramlar: [docs/TASARIM.md](docs/TASARIM.md).
 
-## Ekran görüntüsü (metin)
+## Örnek oturum (kısaltılmış)
 
 ```
 Seçiminiz: 3
