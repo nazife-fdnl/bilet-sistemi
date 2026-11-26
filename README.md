@@ -99,5 +99,4 @@ Projede yapay zekâ asistanı **Claude** (Anthropic) kullanılmıştır. Asistan
 - Gözden geçirme: ayrı yapay zekâ ajanlarıyla projenin dokümanlardan yeniden kurulması ve
   ders kriterlerine göre değerlendirilmesi; bulunan hatalar düzeltildi.
 
-Kod tarafımdan incelenmiş ve çalıştırılmıştır. Yapay zekâ katkısı içeren commit'lerde
-`Co-Authored-By: Claude` satırı bulunur.
+Kod tarafımdan incelenmiş ve çalıştırılmıştır.
